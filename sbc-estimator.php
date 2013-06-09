@@ -25,6 +25,8 @@ License: GPLv3
 */
 
 global $sbc_estimator_db_version;
+global $sbcprefix;
+$sbcprefix = "sbc_est_"
 $sbc_estimator_db_version = "1.0";
 
 register_activation_hook( __FILE__, 'sbc_estimator_install');
@@ -42,8 +44,8 @@ function sbc_options() {
 function sbc_estimator_install () {
   global $wpdb;
   global $sbc_estimator_db_version;
-
-  $tablename = $wpdb->prfix . "sbc_estimator_datatypes";
+  global $sbcprefix;
+  $tablename = $wpdb->prefix . $sbcprefix . "datatypes";
 
   require_once( ABSPATH . "wp-admin/includes/upgrade.php" );
 
@@ -57,16 +59,47 @@ function sbc_estimator_install () {
 
   $rows_affected = $wpdb->insert( $tablename, array( 'name' => 'building', 'name' => 'option' ) );
 
-  $tablename = $wpdb->prefix . "sbc_estimator_data";
+  $tablename = $wpdb->prefix . $sbcprefix . "units";
+
+  $sql = "CREATE TABLE $tablename(
+    id tinyint(3) NOT NULL AUTO_INCREMENT,
+    sym = tinytext NOT NULL,
+    name = tinytext NOT NULL,
+    factor_to_metre DOUBLE NOT NULL,
+    PRIMARY KEY id(id),
+    UNIQUE KEY sym(sym)
+  );";
+
+  dbDelta ( $sql );
+
+  $rows_affected = $wpdb->insert( $tablename, array( 'sym' => 'ea', 'each' => 'metre', 'factor_to_metre' => 0.0 ) );
+  $rows_affected = $wpdb->insert( $tablename, array( 'sym' => 'm', 'name' => 'metre', 'factor_to_metre' => 1.0 ) );
+  $rows_affected = $wpdb->insert( $tablename, array( 'sym' => 'in', 'name' => 'inch', 'factor_to_metre' => 0.0254 ) );
+  $rows_affected = $wpdb->insert( $tablename, array( 'sym' => 'ft', 'feet' => 'metre', 'factor_to_metre' => 0.3048 ) );
+
+  $tablename = $wpdb->prefix . $sbcprefix "data";
 
   $sql = "CREATE TABLE $tablename (
     id mediumint(9) NOT NULL AUTO_INCREMENT,
     type mediumint NOT NULL,
     name tinytext NOT NULL,
     description text,
-    units tinytext NOT NULL,
+    units tinyint(3) NOT NULL,
     price_unit DOUBLE NOT NULL,
-    PRIMARY KEY id (ID)
+    PRIMARY KEY id (id)
+  );";
+
+  dbDelta( $sql );
+  
+  $tablename = $wpdb->prefix . $sbcprefix . 'dims';
+
+  $sql = "CREATE TABLE $tablename (
+    id mediumint (9) NOT NULL,
+    units = tinyint(3) NOT NULL,
+    length = DOUBLE,
+    width = DOUBLE,
+    height = DOUBLE,
+    PRIMARY KEY id (id)
   );";
 
   dbDelta ( $sql );
